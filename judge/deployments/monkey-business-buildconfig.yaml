@@ -1,0 +1,24 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: monkey-business
+  namespace: judge
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: monkey-business:latest
+  source:
+    contextDir: /judge/monkey-business
+    git:
+      uri: git@github.com:catalyst-ctfd/catalyst.git
+    sourceSecret:
+      name: repo-key
+    type: Git
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: python:3.9-ubi8
+        namespace: openshift
+    type: Source

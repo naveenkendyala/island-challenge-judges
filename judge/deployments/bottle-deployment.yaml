@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bottle
+  namespace: judge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bottle
+  template:
+    metadata:
+      labels:
+        app: bottle
+        deployment: bottle
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/judge/bottle:latest
+          name: bottle
+          ports:
+            - containerPort: 8080
+          env: # Add this section
+            - name: CLUSTERDOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: judge-settings
+                  key: cluster-domain

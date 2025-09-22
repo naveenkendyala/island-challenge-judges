@@ -1,0 +1,36 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: morse
+  namespace: judge
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: morse:latest
+  source:
+    contextDir: /judge/morse
+    git:
+      uri: git@github.com:catalyst-ctfd/catalyst.git
+    sourceSecret:
+      name: repo-key
+    type: Git
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: python:3.9-ubi8
+        namespace: openshift
+    type: Source
+  triggers:
+    - generic:
+        secretReference:
+          name: morse-generic-webhook-secret
+      type: Generic
+    - github:
+        secretReference:
+          name: morse-github-webhook-secret
+      type: GitHub
+    - imageChange: {}
+      type: ImageChange
+    - type: ConfigChange

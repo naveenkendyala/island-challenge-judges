@@ -1,0 +1,36 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: bottle
+  namespace: judge
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: bottle:latest
+  source:
+    contextDir: /judge/bottle
+    git:
+      uri: git@github.com:catalyst-ctfd/catalyst.git
+    sourceSecret:
+      name: repo-key
+    type: Git
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: python:3.9-ubi8
+        namespace: openshift
+    type: Source
+  triggers:
+    - generic:
+        secretReference:
+          name: bottle-generic-webhook-secret
+      type: Generic
+    - github:
+        secretReference:
+          name: bottle-github-webhook-secret
+      type: GitHub
+    - imageChange: {}
+      type: ImageChange
+    - type: ConfigChange

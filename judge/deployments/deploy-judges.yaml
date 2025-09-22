@@ -1,0 +1,76 @@
+---
+- name: Import Judges from Git in OpenShift
+  hosts: localhost
+  vars:
+    git_repo_url: "https://github.com/catalyst-ctfd/catalyst.git"
+    app_name: "judge"
+    project_name: "judge"
+
+  tasks:
+    - name: Get the cluster console URL
+      shell: oc get routes --all-namespaces | grep console-openshift | awk '{ print $3 }'
+      register: oc_output
+
+    - name: Extract the cluster domain
+      set_fact:
+        extracted_domain: "{{ oc_output.stdout.split('apps.')[1] }}"
+
+    - name: create {{ project_name }} namespace
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: "{{ project_name }}"
+        state: present
+        wait: yes
+      retries: 20
+      delay: 15
+
+    - name: Create ConfigMap
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: judge-settings
+            namespace: judge
+          data:
+            cluster-domain: "{{ extracted_domain }}"
+
+    - name: Repo SSH key
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'ssh-secret.yaml') }}"
+
+    - name: Bottle - BuildConfig
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'bottle-buildconfig.yaml') }}"
+
+    - name: Bottle - Imagestream
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'bottle-imagestream.yaml') }}"
+
+    - name: Start the Build
+      command: oc start-build bottle -n judge
+      register: build_result
+      changed_when: "'completed' not in build_result.stdout"
+
+    - name: Bottle - Deployment
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'bottle-deployment.yaml') }}"
+
+    - name: Morse - BuildConfig
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'morse-buildconfig.yaml') }}"
+
+    - name: Morse - Imagestream
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'morse-imagestream.yaml') }}"
+
+    - name: Start the Build
+      command: oc start-build morse -n judge
+      register: build_result
+      changed_when: "'completed' not in build_result.stdout"
+
+    - name: Morse - Deployment
+      kubernetes.core.k8s:
+        definition: "{{ lookup('file', 'morse-deployment.yaml') }}"
+

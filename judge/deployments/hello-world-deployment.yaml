@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world
+  namespace: judge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-world
+  template:
+    metadata:
+      labels:
+        app: hello-world
+        deployment: hello-world
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/judge/hello-world:latest
+          name: hello-world
+          ports:
+            - containerPort: 8080
+          env: # Add this section
+            - name: CLUSTERDOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: judge-settings
+                  key: cluster-domain

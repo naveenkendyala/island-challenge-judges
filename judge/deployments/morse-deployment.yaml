@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: morse
+  namespace: judge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: morse
+  template:
+    metadata:
+      labels:
+        app: morse
+        deployment: morse
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/judge/morse:latest
+          name: morse
+          ports:
+            - containerPort: 8080
+          env: # Add this section
+            - name: CLUSTERDOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: judge-settings
+                  key: cluster-domain

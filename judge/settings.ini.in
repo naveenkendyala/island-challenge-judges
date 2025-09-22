@@ -1,0 +1,2 @@
+[DEFAULT]
+cluster_domain = {{ cluster_url }}

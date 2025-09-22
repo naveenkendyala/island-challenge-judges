@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aloha
+  namespace: judge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aloha
+  template:
+    metadata:
+      labels:
+        app: aloha
+        deployment: aloha
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/judge/aloha:latest
+          name: aloha
+          ports:
+            - containerPort: 8080
+          env: # Add this section
+            - name: CLUSTERDOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: judge-settings
+                  key: cluster-domain

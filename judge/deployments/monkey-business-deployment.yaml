@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monkey-business
+  namespace: judge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monkey-business
+  template:
+    metadata:
+      labels:
+        app: monkey-business
+        deployment: monkey-business
+    spec:
+      containers:
+        - image: image-registry.openshift-image-registry.svc:5000/judge/monkey-business:latest
+          name: monkey-business
+          ports:
+            - containerPort: 8080
+          env: 
+            - name: CLUSTERDOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: judge-settings
+                  key: cluster-domain
+            - name: JUDGE_SA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: judge-secret
+                  key: sa-token
